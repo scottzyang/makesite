@@ -1,22 +1,29 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"html/template"
 	"os"
 )
 
 func main() {
+	// create a flag for command
+	fileFlag := flag.String("file", "latest-post.txt", "The name of the file")
+	flag.Parse()
+	//fmt.Println("flag has value", *fileFlag)
+
 	// create new blank HTML file
 	file, err := os.Create("first-post.html")
 	if err != nil {
 		fmt.Println("Error creating HTML file", err)
 	}
 	// Open the file
-	contents, err := os.ReadFile("./first-post.txt")
+	contents, err := os.ReadFile(*fileFlag)
 	if err != nil {
 		fmt.Print(err)
 	}
+	//fmt.Println(string(contents))
 
 	// Parse the template
 	tmpl, err := template.ParseFiles("template.tmpl")
