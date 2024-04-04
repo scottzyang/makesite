@@ -43,10 +43,7 @@ func main() {
 	}
 
 	// execute the template with the content data and output to the HTML file.
-	if err := tmpl.Execute(file, contentData); err != nil {
-		fmt.Println("Error executing template:", err)
-		return
-	}
+	execute(tmpl, file, contentData)
 }
 
 func checkFileExists(filepath string) bool {
@@ -99,4 +96,11 @@ func parseTemplate() *template.Template {
 	}
 
 	return tmpl
+}
+
+func execute(tmpl *template.Template, file *os.File, contentData interface{}) {
+	if err := tmpl.Execute(file, contentData); err != nil {
+		fmt.Println("Error executing template:", err)
+		return
+	}
 }
