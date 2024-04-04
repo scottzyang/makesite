@@ -20,10 +20,9 @@ func main() {
 		Content string
 	}
 
-	// create a flag for command
+	// create new flags
 	fileFlag := flag.String("file", "latest-post.txt", "The name of the file")
 	flag.Parse()
-	//fmt.Println("flag has value", *fileFlag)
 
 	// grab the file name from the command line
 	fileName := strings.TrimSuffix(*fileFlag, ".txt")
@@ -32,7 +31,7 @@ func main() {
 	file := createNewHtmlFile(fileName)
 
 	// Double check if the file exists, if not then create it
-	fileContent = createOrOpenTextFile(fileFlag, textFile, contents, fileContent)
+	fileContent = createOrOpenTextFile(fileFlag, textFile, contents)
 
 	// Parse the template
 	tmpl := parseTemplate()
@@ -54,7 +53,7 @@ func checkFileExists(filepath string) bool {
 }
 
 func createNewHtmlFile(fileName string) *os.File {
-	file, err := os.Create(fileName + ".html")
+	file, err := os.Create("./posts/" + fileName + ".html")
 	if err != nil {
 		fmt.Println("Error creating HTML file", err)
 	}
@@ -62,24 +61,26 @@ func createNewHtmlFile(fileName string) *os.File {
 	return file
 }
 
-func createOrOpenTextFile(fileFlag *string, textFile *os.File, contents []byte, fileContent []byte) []byte {
-	// verify that text file exists, if not then create it
-	if !checkFileExists(*fileFlag) {
+func createOrOpenTextFile(fileFlag *string, textFile *os.File, contents []byte) []byte {
+	var fileContent []byte
+
+	// Verify that text file exists, if not then create it
+	if !checkFileExists("./text/" + *fileFlag) {
 		var err error
-		textFile, err = os.Create(*fileFlag)
+		textFile, err = os.Create("./text/" + *fileFlag)
 		if err != nil {
 			fmt.Println("Error creating text file", err)
 		}
 	} else {
 		// Open the file
 		var err error
-		contents, err = os.ReadFile(*fileFlag)
+		contents, err = os.ReadFile("./text/" + *fileFlag)
 		if err != nil {
 			fmt.Print(err)
 		}
 	}
 
-	// if the text file is nil, then there is no content yet
+	// If the text file is nil, then there is no content yet
 	if textFile != nil {
 		fileContent = []byte("No content yet")
 	} else {
