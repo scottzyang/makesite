@@ -31,7 +31,7 @@ func main() {
 	file := createNewHtmlFile(fileName)
 
 	// Double check if the file exists, if not then create it
-	fileContent = createOrOpenTextFile(fileFlag, textFile, contents)
+	fileContent = createOrReadTextFile(fileFlag, textFile, contents)
 
 	// Parse the template
 	tmpl := parseTemplate()
@@ -61,7 +61,7 @@ func createNewHtmlFile(fileName string) *os.File {
 	return file
 }
 
-func createOrOpenTextFile(fileFlag *string, textFile *os.File, contents []byte) []byte {
+func createOrReadTextFile(fileFlag *string, textFile *os.File, contents []byte) []byte {
 	var fileContent []byte
 
 	// Verify that text file exists, if not then create it
