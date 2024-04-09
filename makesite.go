@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 func main() {
@@ -26,15 +28,18 @@ func main() {
 }
 
 func createMultiplePosts(tmpl *template.Template, dirFlag string) {
+	// total amount of posts
+	var totalPosts int
+
 	// create multiple posts
 	err := filepath.Walk(dirFlag, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			fmt.Println("Error traversing directory", err)
 		}
 		if path != dirFlag {
-			fmt.Println(path)
 			tmpFileFlag := strings.TrimPrefix(path, "text/")
 			createSinglePost(tmpl, tmpFileFlag)
+			totalPosts++
 		}
 
 		return nil
@@ -43,6 +48,16 @@ func createMultiplePosts(tmpl *template.Template, dirFlag string) {
 	if err != nil {
 		fmt.Println("Error initiating directory traversal", err)
 	}
+
+	successMessage(totalPosts)
+}
+
+func successMessage(totalPosts int) {
+	green := color.New(color.FgGreen)
+	boldGreen := color.New(color.FgGreen).Add(color.Bold)
+	green.Printf("Success! Generated ")
+	boldGreen.Printf("%d", totalPosts)
+	green.Printf(" posts. \n")
 }
 
 func createSinglePost(tmpl *template.Template, fileFlag string) {
@@ -97,14 +112,14 @@ func createOrReadTextFile(fileFlag string) []byte {
 
 		var err error
 		contents, err = os.ReadFile("./text/" + fileFlag)
-		fmt.Println("Reading textfile")
+		fmt.Println("Reading textfile", fileFlag)
 		if err != nil {
 			fmt.Print(err)
 		}
 	} else {
 		var err error
 		textFile, err = os.Create("./text/" + fileFlag)
-		fmt.Println("Creating textfile")
+		fmt.Println("Creating textfile", textFile)
 		if err != nil {
 			fmt.Println("Error creating text file", err)
 		}
@@ -117,7 +132,7 @@ func createOrReadTextFile(fileFlag string) []byte {
 		}
 
 		newTextContent, err = os.ReadFile("./text/" + fileFlag)
-		fmt.Println("Reading newly created text file")
+		fmt.Println("Reading newly created text file", fileFlag)
 		if err != nil {
 			fmt.Println("Error reading newly created text file", err)
 		}
