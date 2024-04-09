@@ -19,17 +19,22 @@ func main() {
 	flag.Parse()
 
 	// create single post
-	createNewSinglePost(tmpl, *fileFlag)
+	createSinglePost(tmpl, *fileFlag)
 
 	// create multiple posts
-	err := filepath.Walk(*dirFlag, func(path string, info os.FileInfo, err error) error {
+	createMultiplePosts(tmpl, *dirFlag)
+}
+
+func createMultiplePosts(tmpl *template.Template, dirFlag string) {
+	// create multiple posts
+	err := filepath.Walk(dirFlag, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			fmt.Println("Error traversing directory", err)
 		}
-		if path != *dirFlag {
+		if path != dirFlag {
 			fmt.Println(path)
 			tmpFileFlag := strings.TrimPrefix(path, "text/")
-			createNewSinglePost(tmpl, tmpFileFlag)
+			createSinglePost(tmpl, tmpFileFlag)
 		}
 
 		return nil
@@ -40,7 +45,7 @@ func main() {
 	}
 }
 
-func createNewSinglePost(tmpl *template.Template, fileFlag string) {
+func createSinglePost(tmpl *template.Template, fileFlag string) {
 	var fileContent []byte
 
 	// new struct to pass into tmpl
