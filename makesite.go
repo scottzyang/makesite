@@ -4,14 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 )
 
 func main() {
+	// initiate measurement of execution time
+	start := time.Now()
 	// Parse the template
 	tmpl := parseTemplate()
 
@@ -25,11 +29,14 @@ func main() {
 
 	// create multiple posts
 	createMultiplePosts(tmpl, *dirFlag)
+	elapsed := time.Since(start)
+	fmt.Printf("Execution time: %s\n", elapsed)
 }
 
 func createMultiplePosts(tmpl *template.Template, dirFlag string) {
 	// total amount of posts
 	var totalPosts int
+	var postSize float64
 
 	// create multiple posts
 	err := filepath.Walk(dirFlag, func(path string, info os.FileInfo, err error) error {
@@ -39,6 +46,19 @@ func createMultiplePosts(tmpl *template.Template, dirFlag string) {
 		if path != dirFlag {
 			tmpFileFlag := strings.TrimPrefix(path, "text/")
 			createSinglePost(tmpl, tmpFileFlag)
+
+			tmpFileFlag = strings.TrimSuffix(tmpFileFlag, ".txt")
+
+			// calculate size
+			fileInfo, err := os.Stat("posts/" + tmpFileFlag + ".html")
+			if err != nil {
+				fmt.Println(err)
+			}
+			fileSizeKB := float64(fileInfo.Size()) / 1024.0
+			fileSizeKB = math.Round(fileSizeKB*10) / 10
+
+			postSize += float64(fileSizeKB)
+
 			totalPosts++
 		}
 
@@ -49,15 +69,16 @@ func createMultiplePosts(tmpl *template.Template, dirFlag string) {
 		fmt.Println("Error initiating directory traversal", err)
 	}
 
-	successMessage(totalPosts)
+	successMessage(totalPosts, postSize)
 }
 
-func successMessage(totalPosts int) {
+func successMessage(totalPosts int, postSize float64) {
+	// style the output
 	green := color.New(color.FgGreen)
 	boldGreen := color.New(color.FgGreen).Add(color.Bold)
 	green.Printf("Success! Generated ")
 	boldGreen.Printf("%d", totalPosts)
-	green.Printf(" posts. \n")
+	green.Printf(" posts. (%.1f kB) \n", postSize)
 }
 
 func createSinglePost(tmpl *template.Template, fileFlag string) {
@@ -112,7 +133,6 @@ func createOrReadTextFile(fileFlag string) []byte {
 
 		var err error
 		contents, err = os.ReadFile("./text/" + fileFlag)
-		fmt.Println("Reading textfile", fileFlag)
 		if err != nil {
 			fmt.Print(err)
 		}
