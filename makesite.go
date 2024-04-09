@@ -9,39 +9,38 @@ import (
 )
 
 func main() {
-	// declare variables and structs
-	var contents []byte
-	var fileContent []byte
-
-	// define data structure to pass to the template
-	// capitalized to be accessed in tmpl
-	type Content struct {
-		Content string
-	}
+	// Parse the template
+	tmpl := parseTemplate()
 
 	// create new flags
 	fileFlag := flag.String("file", "latest-post.txt", "The name of the file")
 	flag.Parse()
 
-	// grab the file name from the command line
-	fileName := strings.TrimSuffix(*fileFlag, ".txt")
+	// create single post
+	createNewSinglePost(tmpl, *fileFlag)
+}
 
-	// create new blank HTML file with the same name as the text file
-	file := createNewHtmlFile(fileName)
+func createNewSinglePost(tmpl *template.Template, fileFlag string) {
+	var fileContent []byte
 
-	// Double check if the file exists, if not then create it
-	fileContent = createOrReadTextFile(fileFlag, contents)
-
-	// Parse the template
-	tmpl := parseTemplate()
-
-	// create an instance of Content
-	contentData := Content{
-		Content: string(fileContent),
+	// new struct to pass into tmpl
+	type Content struct {
+		Text string
 	}
 
-	// execute the template with the content data and output to the HTML file.
-	execute(tmpl, file, contentData)
+	// create new blank HTML file with the same name as the text file
+	htmlFile := createNewHtmlFile(fileFlag)
+
+	// Double check if the file exists, if not then create it
+	fileContent = createOrReadTextFile(fileFlag)
+
+	// add content to instance of Content
+	contentData := Content{
+		Text: string(fileContent),
+	}
+
+	// take parsed template, with the contentData and put it in HTML file
+	execute(tmpl, htmlFile, contentData)
 }
 
 func fileExists(filepath string) bool {
@@ -51,7 +50,9 @@ func fileExists(filepath string) bool {
 	return true // File exists
 }
 
-func createNewHtmlFile(fileName string) *os.File {
+func createNewHtmlFile(fileFlag string) *os.File {
+	fileName := strings.TrimSuffix(fileFlag, ".txt")
+
 	file, err := os.Create("./posts/" + fileName + ".html")
 	if err != nil {
 		fmt.Println("Error creating HTML file", err)
@@ -60,24 +61,25 @@ func createNewHtmlFile(fileName string) *os.File {
 	return file
 }
 
-func createOrReadTextFile(fileFlag *string, contents []byte) []byte {
+func createOrReadTextFile(fileFlag string) []byte {
+	var contents []byte
 	var fileContent []byte
 	var textFile *os.File
 	var newTextContent []byte
 
 	// Verify that text file exists, if not then create it
-	if fileExists("./text/" + *fileFlag) {
+	if fileExists("./text/" + fileFlag) {
 
 		var err error
-		contents, err = os.ReadFile("./text/" + *fileFlag)
-		fmt.Println("Reading textfile:")
+		contents, err = os.ReadFile("./text/" + fileFlag)
+		fmt.Println("Reading textfile")
 		if err != nil {
 			fmt.Print(err)
 		}
 	} else {
 		var err error
-		textFile, err = os.Create("./text/" + *fileFlag)
-		fmt.Println("Creating textfile:")
+		textFile, err = os.Create("./text/" + fileFlag)
+		fmt.Println("Creating textfile")
 		if err != nil {
 			fmt.Println("Error creating text file", err)
 		}
@@ -89,8 +91,8 @@ func createOrReadTextFile(fileFlag *string, contents []byte) []byte {
 			fmt.Println("Error writing to new text file", err)
 		}
 
-		newTextContent, err = os.ReadFile("./text/" + *fileFlag)
-		fmt.Println("Reading newly created text file:")
+		newTextContent, err = os.ReadFile("./text/" + fileFlag)
+		fmt.Println("Reading newly created text file")
 		if err != nil {
 			fmt.Println("Error reading newly created text file", err)
 		}
