@@ -10,7 +10,6 @@ import (
 
 func main() {
 	// declare variables and structs
-	var textFile *os.File
 	var contents []byte
 	var fileContent []byte
 
@@ -31,7 +30,7 @@ func main() {
 	file := createNewHtmlFile(fileName)
 
 	// Double check if the file exists, if not then create it
-	fileContent = createOrReadTextFile(fileFlag, textFile, contents)
+	fileContent = createOrReadTextFile(fileFlag, contents)
 
 	// Parse the template
 	tmpl := parseTemplate()
@@ -45,7 +44,7 @@ func main() {
 	execute(tmpl, file, contentData)
 }
 
-func checkFileExists(filepath string) bool {
+func fileExists(filepath string) bool {
 	if _, err := os.Stat(filepath); os.IsNotExist(err) {
 		return false // File does not exist
 	}
@@ -61,28 +60,45 @@ func createNewHtmlFile(fileName string) *os.File {
 	return file
 }
 
-func createOrReadTextFile(fileFlag *string, textFile *os.File, contents []byte) []byte {
+func createOrReadTextFile(fileFlag *string, contents []byte) []byte {
 	var fileContent []byte
+	var textFile *os.File
+	var newTextContent []byte
 
 	// Verify that text file exists, if not then create it
-	if !checkFileExists("./text/" + *fileFlag) {
+	if fileExists("./text/" + *fileFlag) {
+
+		var err error
+		contents, err = os.ReadFile("./text/" + *fileFlag)
+		fmt.Println("Reading textfile:")
+		if err != nil {
+			fmt.Print(err)
+		}
+	} else {
 		var err error
 		textFile, err = os.Create("./text/" + *fileFlag)
+		fmt.Println("Creating textfile:")
 		if err != nil {
 			fmt.Println("Error creating text file", err)
 		}
-	} else {
-		// Open the file
-		var err error
-		contents, err = os.ReadFile("./text/" + *fileFlag)
+
+		emptyContent := []byte("No content yet!")
+		_, err = textFile.Write(emptyContent)
+		fmt.Println("Writing textfile:")
 		if err != nil {
-			fmt.Print(err)
+			fmt.Println("Error writing to new text file", err)
+		}
+
+		newTextContent, err = os.ReadFile("./text/" + *fileFlag)
+		fmt.Println("Reading newly created text file:")
+		if err != nil {
+			fmt.Println("Error reading newly created text file", err)
 		}
 	}
 
 	// If the text file is nil, then there is no content yet
 	if textFile != nil {
-		fileContent = []byte("No content yet")
+		fileContent = newTextContent
 	} else {
 		fileContent = contents
 	}
