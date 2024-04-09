@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -13,11 +14,30 @@ func main() {
 	tmpl := parseTemplate()
 
 	// create new flags
-	fileFlag := flag.String("file", "latest-post.txt", "The name of the file")
+	fileFlag := flag.String("file", "latest-post.txt", "The name of the file.")
+	dirFlag := flag.String("dir", "text", "Directory to search for text files.")
 	flag.Parse()
 
 	// create single post
 	createNewSinglePost(tmpl, *fileFlag)
+
+	// create multiple posts
+	err := filepath.Walk(*dirFlag, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			fmt.Println("Error traversing directory", err)
+		}
+		if path != *dirFlag {
+			fmt.Println(path)
+			tmpFileFlag := strings.TrimPrefix(path, "text/")
+			createNewSinglePost(tmpl, tmpFileFlag)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println("Error initiating directory traversal", err)
+	}
 }
 
 func createNewSinglePost(tmpl *template.Template, fileFlag string) {
@@ -86,7 +106,7 @@ func createOrReadTextFile(fileFlag string) []byte {
 
 		emptyContent := []byte("No content yet!")
 		_, err = textFile.Write(emptyContent)
-		fmt.Println("Writing textfile:")
+		fmt.Println("Writing textfile")
 		if err != nil {
 			fmt.Println("Error writing to new text file", err)
 		}
