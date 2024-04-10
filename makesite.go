@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/gomarkdown/markdown"
 )
 
 func main() {
@@ -22,6 +23,7 @@ func main() {
 	// create new flags
 	fileFlag := flag.String("file", "latest-post.txt", "The name of the file.")
 	dirFlag := flag.String("dir", "text", "Directory to search for text files.")
+	mdFlag := flag.String("md", "markdown", "Directory to search for markdown files.")
 	flag.Parse()
 
 	// create single post
@@ -29,8 +31,54 @@ func main() {
 
 	// create multiple posts
 	createMultiplePosts(tmpl, *dirFlag)
+
+	// convert Markdown files to HTML
+	convertMarkdownToHTML(*mdFlag)
+
 	elapsed := time.Since(start)
 	fmt.Printf("Execution time: %s\n", elapsed)
+}
+
+func convertMarkdownToHTML(mdFlag string) {
+	var markdownContent []byte
+
+	err := filepath.Walk(mdFlag, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			fmt.Println("Error traversing directory", err)
+		}
+
+		// converting logic
+		if path != mdFlag {
+			markdownContent, err = os.ReadFile(path)
+			if err != nil {
+				fmt.Println("Error reading markdown file.")
+			}
+
+			// convert to html
+			html := markdown.ToHTML(markdownContent, nil, nil)
+
+			// grab name
+			markdownTitle := strings.TrimSuffix(strings.TrimPrefix(path, "markdown/"), ".md")
+
+			// create HTML file with markdown file name
+			htmlFile, err := os.Create("./posts/" + markdownTitle + ".html")
+			if err != nil {
+				fmt.Println("Error creating html post from markdown.")
+			}
+
+			// write contents of markdown file to html file
+			_, err = htmlFile.Write(html)
+			if err != nil {
+				fmt.Println("Error writing markdown content into html file.")
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println("Error initiating directory traversal", err)
+	}
 }
 
 func createMultiplePosts(tmpl *template.Template, dirFlag string) {
